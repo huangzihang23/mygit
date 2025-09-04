@@ -1,0 +1,58 @@
+seed: 42
+log_level: INFO
+logging_steps: 5
+logging_strategy: steps
+
+model_path: ./Qwen2.5-Coder-0.5B-Instruct
+work_dir: ./exp/{model_path}-lora-grpo/{ts}/
+
+countdown_conf: # evaluation
+    numbers: [1, 2, 3, 4]
+    target: 24
+    problem_path: ./data/problem/
+    benchmark_problem_size: 4
+    benchmark_iterations: 128
+    evaluate_strategy: epoch 
+
+inf_conf:
+    max_new_tokens: 512
+    num_return_sequences: 2
+    temperature: 0.3
+    top_k: 30
+    policy_prompt: "<|im_start|>system\nYou are a helpful assistant. You first think about the reasoning process in the mind and then provide the user with the answer.<|im_end|>\n<|im_start|>user\n Using the numbers {numbers}, create an equation that equals {target}. Show your work in <think> </think> tags. And return the final answer in <answer> </answer> tags. Please output a best operation in format: <op> <index1> <index2> in the <answer> </answer> tags. <op> is the operator you can use, which are basic arithmetic operations (+, -, *, /). <index1> and <index2> are two different indexs smaller than {len_num}. For example <answer> * 0 1 </answer>.<|im_end|>\n<|im_start|>assistant\nLet me solve this step by step.\n<think>"
+    value_prompt: "Given the numbers {numbers} and target {target}, rate the quality of operation {op} {index1} {index2} on a scale of 0-1. Answer:" 
+
+lora_conf:
+    lora_rank: 8
+    lora_alpha: 16
+    target_modules: ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]
+    lora_dropout: 0.05
+    lora_bias: none
+    task_type: CAUSAL_LM
+
+train_conf:
+    # data_path: ./data/rollout=1_iteration=128_samples.json
+    optim: adamw_torch #paged_adamw_32bit #adamw
+    lr: 0.000005
+    lr_scheduler_type: cosine
+    max_length: 512
+    num_train_epochs: 1
+    per_device_train_batch_size: 2
+    gradient_accumulation_steps: 8
+    logging_steps: 1
+    num_generations: 2
+    num_rulebase_only_epochs: 2
+    num_samples_per_epoch: 1024
+    sft_epochs: 2
+    sft_num_epochs: 3
+    max_seq_length: 1024
+
+mcts_conf: # training
+    iterations: 512
+    num_rollout: 100
+    simulate_steps: 8
+    c: 1.414
+
+sample_conf:
+    buffer_size: 1024
+    pos_ratio: 0.5
