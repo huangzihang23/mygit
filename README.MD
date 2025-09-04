@@ -15,10 +15,13 @@
 ```bash
 .
 ├── README.MD
+├── journal
+│   ├── journal(8_18-8_22).md
+│   └── journal(8_23~8_28).md
 └── project
     ├── codes
-    │   ├── qwen_mcts4.py
-    │   └── qwen_mcts_new_benchmark.py
+    │   ├── qwen_mcts4.py
+    │   └── qwen_mcts_new_benchmark.py
     └── config
         └── qwen2.5-0.5b-instruct-mcts-countdown-fulltest.yaml
 ```
@@ -48,7 +51,7 @@
     ```
 3. 配置依赖 
     这里假设已经配好了依赖，不需要额外配置
-    
+
 4. 进入project目录
    ```bash
    cd project
