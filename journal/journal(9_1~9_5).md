@@ -1,5 +1,7 @@
-一. 奖励函数设计
-# 统一奖励函数，替代了原来的四个独立奖励函数
+## Journal (9_1~9_5)
+
+### 一. 奖励函数设计
+``` python
 def unified_reward_function(completions, **kwargs):
     rewards = []
     
@@ -92,10 +94,11 @@ def unified_reward_function(completions, **kwargs):
 
         rewards.append(final_reward)
     return rewards
-
+```
 1.引入 PPL-based Reward Shaping，对正确路径根据困惑度进行奖励调节
 公式：final_reward = base_reward * (1 - ppl_alpha * log(ppl))
-二. 改进的 MCTS 模拟策略
+### 二. 改进的 MCTS 模拟策略
+``` python
 def simulate(self, node, llm_reasoner):
     current_env = node.env
     for _ in range(self.simulate_steps):
@@ -158,7 +161,7 @@ def simulate(self, node, llm_reasoner):
         current_env = new_env
     
     return current_env.evaluate_state()
-
+```
 1.引入操作评分机制替代随机选择:
 - 计算每个操作带来的目标距离减少量：dist_reduction = abs(current_closest - target) - abs(new_closest - target)
 - 使用 softmax 函数将距离减少量转换为选择概率
@@ -166,7 +169,8 @@ def simulate(self, node, llm_reasoner):
 - 优势：使模拟过程更加导向目标，提高搜索效率
 2.使用栈结构替代递归提取所有路径
 - 优势：避免递归深度限制，提高大规模树搜索的稳定性
-三. 数据选择和质量评估
+### 三. 数据选择和质量评估
+``` python
 @torch.no_grad()
 def calculate_metrics_for_samples(self, cot_samples):
     """
@@ -205,13 +209,14 @@ def calculate_metrics_for_samples(self, cot_samples):
         sample['entropy'] = entropy
     
     return cot_samples
-
+```
 1.引入 PPL 和熵作为样本质量指标：
 - 计算响应部分的困惑度：ppl = torch.exp(avg_loss).item()
 - 计算响应部分的平均熵：entropy = torch.distributions.Categorical(logits=response_logits).entropy().mean().item()
 - 支持多种选择策略：'ppl'（低困惑度优先）或 'entropy'（高熵优先）
 - 优势：筛选高质量训练样本，提高训练效率
-四. SFT + GRPO 混合训练策略
+### 四. SFT + GRPO 混合训练策略
+``` python
 # 在主训练循环中
 strategy = config['train_conf'].get('data_selection_strategy', 'none')
 selection_pct = config['train_conf'].get('data_selection_percent', 1.0)
@@ -238,13 +243,14 @@ if use_sft:
     
     # 4. 执行SFT训练
     llm_reasoner.sft_finetune(selected_samples, epoch)
-
+```
 1.前几个 epoch 使用 SFT，后续使用 GRPO：
 - 仅选择成功路径进行 SFT 训练
 - 按 PPL 排序选择高质量样本
 - 配置参数控制 SFT 训练轮次：sft_epochs
 - 优势：先学习高质量解决方案的模式，再通过强化学习优化策略
-五. 改进的评估函数 (Pass@k)
+### 五. 改进的评估函数 (Pass@k)
+``` python
 def benchmark(llm_reasoner, test_cases, k_samples):
     """
     Rewritten benchmark function to calculate Pass@1 and Pass@k.
@@ -283,14 +289,14 @@ def benchmark(llm_reasoner, test_cases, k_samples):
     logger.info(f"Pass@{k_samples} Accuracy: {pass_at_k_accuracy:.4f} ({pass_at_k_count}/{total_cases})")
     logger.info("-----------------------")
     return {"pass@1": pass_at_1_accuracy, f"pass@{k_samples}": pass_at_k_accuracy}
-
+```
 1.从单一 Pass@1 扩展到 Pass@k 评估：
 - 对每个测试案例进行 k 次生成尝试
 - 记录第一次尝试成功（Pass@1）和任意一次尝试成功（Pass@k）
 - 配置参数控制 k 值：benchmark_k_samples
 - 优势：更全面评估模型的多样性和可靠性
 
-问题
+### 问题
 
-9_1~9_5 安排
+### 9_1~9_5 安排
 
